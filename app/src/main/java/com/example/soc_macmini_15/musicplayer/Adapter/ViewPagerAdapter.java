@@ -1,10 +1,11 @@
 package com.example.soc_macmini_15.musicplayer.Adapter;
 
 import android.content.ContentResolver;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.example.soc_macmini_15.musicplayer.Fragments.AllSongFragment;
 import com.example.soc_macmini_15.musicplayer.Fragments.CurrentSongFragment;

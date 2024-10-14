@@ -7,30 +7,28 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
-import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.ViewPager;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+
 import android.os.Bundle;
 
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.viewpager.widget.ViewPager;
 
 import com.example.soc_macmini_15.musicplayer.Adapter.ViewPagerAdapter;
 import com.example.soc_macmini_15.musicplayer.DB.FavoritesOperations;
@@ -39,6 +37,10 @@ import com.example.soc_macmini_15.musicplayer.Fragments.CurrentSongFragment;
 import com.example.soc_macmini_15.musicplayer.Fragments.FavSongFragment;
 import com.example.soc_macmini_15.musicplayer.Model.SongsList;
 import com.example.soc_macmini_15.musicplayer.R;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 
@@ -119,10 +121,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 item.setChecked(true);
                 mDrawerLayout.closeDrawers();
-                switch (item.getItemId()) {
+                /*switch (item.getItemId()) {
                     case R.id.nav_about:
                         about();
                         break;
+                }*/
+                if(item.getItemId() == R.id.nav_about){
+                    about();
                 }
                 return true;
             }
@@ -163,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case MY_PERMISSION_REQUEST:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -269,8 +275,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId()== android.R.id.home){
+            mDrawerLayout.openDrawer(Gravity.START);
+            return true;
+        }
+        else if (item.getItemId()== R.id.menu_search){
+            Toast.makeText(this, "Search", Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (item.getItemId()== R.id.menu_favorites) {
+            if (checkFlag)
+                if (mediaPlayer != null) {
+                    if (favFlag) {
+                        Toast.makeText(this, "Added to Favorites", Toast.LENGTH_SHORT).show();
+                        item.setIcon(R.drawable.ic_favorite_filled);
+                        SongsList favList = new SongsList(songList.get(currentPosition).getTitle(),
+                                songList.get(currentPosition).getSubTitle(), songList.get(currentPosition).getPath());
+                        FavoritesOperations favoritesOperations = new FavoritesOperations(this);
+                        favoritesOperations.addSongFav(favList);
+                        setPagerLayout();
+                        favFlag = false;
+                    } else {
+                        item.setIcon(R.drawable.favorite_icon);
+                        favFlag = true;
+                    }
+                }
+            return true;
+        }
 
-        switch (item.getItemId()) {
+        /*switch (item.getItemId()) {
             case android.R.id.home:
                 mDrawerLayout.openDrawer(Gravity.START);
                 return true;
@@ -295,9 +327,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     }
                 return true;
-        }
+        }*/
 
-        return super.onOptionsItemSelected(item);
+       else return super.onOptionsItemSelected(item);
 
     }
 
@@ -309,7 +341,71 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
+
+        if (v.getId()==R.id.img_btn_play){
+            if (checkFlag) {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                    imgBtnPlayPause.setImageResource(R.drawable.play_icon);
+                } else if (!mediaPlayer.isPlaying()) {
+                    mediaPlayer.start();
+                    imgBtnPlayPause.setImageResource(R.drawable.pause_icon);
+                    playCycle();
+                }
+            } else {
+                Toast.makeText(this, "Select the Song ..", Toast.LENGTH_SHORT).show();
+            }
+        } else if (v.getId()==R.id.btn_refresh) {
+            Toast.makeText(this, "Refreshing", Toast.LENGTH_SHORT).show();
+            setPagerLayout();
+        } else if (v.getId()==R.id.img_btn_replay) {
+            if (repeatFlag) {
+                Toast.makeText(this, "Replaying Removed..", Toast.LENGTH_SHORT).show();
+                mediaPlayer.setLooping(false);
+                repeatFlag = false;
+            } else {
+                Toast.makeText(this, "Replaying Added..", Toast.LENGTH_SHORT).show();
+                mediaPlayer.setLooping(true);
+                repeatFlag = true;
+            }
+        } else if (v.getId()==R.id.img_btn_previous) {
+            if (checkFlag) {
+                if (mediaPlayer.getCurrentPosition() > 10) {
+                    if (currentPosition - 1 > -1) {
+                        attachMusic(songList.get(currentPosition - 1).getTitle(), songList.get(currentPosition - 1).getPath());
+                        currentPosition = currentPosition - 1;
+                    } else {
+                        attachMusic(songList.get(currentPosition).getTitle(), songList.get(currentPosition).getPath());
+                    }
+                } else {
+                    attachMusic(songList.get(currentPosition).getTitle(), songList.get(currentPosition).getPath());
+                }
+            } else {
+                Toast.makeText(this, "Select a Song . .", Toast.LENGTH_SHORT).show();
+            }
+        } else if (v.getId()==R.id.img_btn_next) {
+            if (checkFlag) {
+                if (currentPosition + 1 < songList.size()) {
+                    attachMusic(songList.get(currentPosition + 1).getTitle(), songList.get(currentPosition + 1).getPath());
+                    currentPosition += 1;
+                } else {
+                    Toast.makeText(this, "Playlist Ended", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(this, "Select the Song ..", Toast.LENGTH_SHORT).show();
+            }
+
+        } else if (v.getId()==R.id.img_btn_setting) {
+            if (!playContinueFlag) {
+                playContinueFlag = true;
+                Toast.makeText(this, "Loop Added", Toast.LENGTH_SHORT).show();
+            } else {
+                playContinueFlag = false;
+                Toast.makeText(this, "Loop Removed", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        /*switch (v.getId()) {
             case R.id.img_btn_play:
                 if (checkFlag) {
                     if (mediaPlayer.isPlaying()) {
@@ -377,7 +473,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(this, "Loop Removed", Toast.LENGTH_SHORT).show();
                 }
                 break;
-        }
+        }*/
     }
 
     /**
